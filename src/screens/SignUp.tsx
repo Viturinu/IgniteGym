@@ -4,17 +4,15 @@ import LogoSvg from "@assets/logo.svg"
 import { Input } from "@components/Input"
 import { Button } from "@components/Button"
 import { useNavigation } from "@react-navigation/native"
-import { AuthNavigatorRoutesProps } from "@routes/auth.routes"
 
 
-export function SignIn() {
+export function SignUp() {
 
-    const navigation = useNavigation<AuthNavigatorRoutesProps>();
+    const navigation = useNavigation();
 
-    function handleNewAccount() {
-        navigation.navigate("signUp");
+    function handleGoBack() {
+        navigation.goBack();
     }
-
     return (
         <ScrollView contentContainerStyle={{ flexGrow: 1 }} showsVerticalScrollIndicator={false}>
             <VStack flex={1} px={10}>
@@ -33,8 +31,11 @@ export function SignIn() {
                 </Center>
                 <Center>
                     <Heading color="gray.100" fontSize="xl" mb={6} fontFamily="heading">
-                        Acesse sua conta
+                        Crie sua conta
                     </Heading>
+                    <Input
+                        placeholder="Nome"
+                    />
                     <Input
                         placeholder="E-mail"
                         keyboardType="email-address"
@@ -44,15 +45,17 @@ export function SignIn() {
                         placeholder="Senha"
                         secureTextEntry
                     />
-                    <Button title="Acessar" variant="outline" />
+                    <Button
+                        title="Criar e acessar"
+                        mb={2}
+                    />
                 </Center>
-
-                <Center mb={4}>
-                    <Text color="gray.100" fontSize="sm" mb={3} fontFamily="body">
-                        Ainda não tem acesso?
-                    </Text>
-                    <Button title="Criar conta" onPress={handleNewAccount} />
-                </Center>
+                <Button
+                    title="Voltar para o login"
+                    variant="outline"
+                    mb={2}
+                    onPress={handleGoBack}
+                />
             </VStack>
         </ScrollView >
 
