@@ -6,7 +6,7 @@ type Props = IInputProps & {
 
 export function Input({ errorMessage, isInvalid, ...rest }: Props) {
 
-    const invalid = !!errorMessage || isInvalid; // !! serve para retornar um bool(negação da negação), caso existe algo em errorMessage?
+    const invalid = !!errorMessage || isInvalid; // !! serve para retornar um bool(negação da negação), caso existe algo em errorMessage? | isInvalid é uma propriedade nativa do Input que, utilizada por bibliotecas como o yup, ao identificar algum padrão errado do esperado, ele seta ela como invalida
 
     return (
         <FormControl isInvalid={invalid} mb={4}>
@@ -31,7 +31,9 @@ export function Input({ errorMessage, isInvalid, ...rest }: Props) {
                 }}
                 {...rest}
             />
-            <FormControl.ErrorMessage _text={{ color: "red.500" }}>
+            <FormControl.ErrorMessage
+                _text={{ color: "red.500" }}
+            >
                 {errorMessage}
             </FormControl.ErrorMessage>
         </FormControl>
