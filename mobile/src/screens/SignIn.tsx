@@ -94,7 +94,7 @@ export function SignIn() {
                     <Text color="gray.100" fontSize="sm" mb={3} fontFamily="body">
                         Ainda não tem acesso?
                     </Text>
-                    <Button title="Criar conta" onPress={() => handleNewAccount} />
+                    <Button title="Criar conta" onPress={handleNewAccount} />
                 </Center>
             </VStack>
         </ScrollView >

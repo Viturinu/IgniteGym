@@ -5,7 +5,7 @@ const AppError = require("../utils/AppError");
 class UsersController {
   async create(request, response) {
     const { name, email, password } = request.body;
-
+    console.log(name, email, password)
     if (!name || !email || !password) {
       throw new AppError("Informe todos os campos (nome, email e senha).");
     }
