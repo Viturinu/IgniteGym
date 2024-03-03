@@ -1,4 +1,5 @@
-import { VStack, Image, Text, Center, Heading, ScrollView } from "native-base"
+import { VStack, Image, Text, Center, Heading, ScrollView, useToast } from "native-base"
+import { Alert } from "react-native"
 import Background from "@assets/background.png"
 import LogoSvg from "@assets/logo.svg"
 import { Input } from "@components/Input"
@@ -7,6 +8,9 @@ import { useNavigation } from "@react-navigation/native"
 import { useForm, Controller } from "react-hook-form"
 import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
+import { api } from "@services/api"
+import axios from "axios"
+import { AppError } from "@utils/AppError"
 
 type FormDataProps = {
     name: string;
@@ -27,6 +31,8 @@ export function SignUp() {
 
     const navigation = useNavigation();
 
+    const toast = useToast();
+
     const { control, handleSubmit, formState: { errors } } = useForm<FormDataProps>({
         resolver: yupResolver(signUpSchema)
     });
@@ -36,6 +42,22 @@ export function SignUp() {
     }
 
     async function handleSignUp({ name, email, password }: FormDataProps) {
+        try {
+            const response = await api.post("/users", { name, email, password }); //já vem convertida em json (diferente do fetch ali embaixo)
+        } catch (error) {
+            const isAppError = error instanceof AppError; //se for, ele é um erro tratado
+            const title = isAppError ? error.message : "Não foi possível criar a conta, tente novamente mais tarde"
+            toast.show({
+                title,
+                placement: "top",
+                bgColor: "red.500"
+            })
+            /*
+            if (axios.isAxiosError(error)) //verifica se essa excessão vem do backend
+                Alert.alert(error.response?.data.message); //se for do axios, a gente consegue acessar essas estruturas subsequentes    
+                */
+        }
+        /*
         const response = await fetch("http://192.168.1.12:3333/users", {
             method: "POST",
             headers: {
@@ -46,6 +68,7 @@ export function SignUp() {
         });
         const data = await response.json();
         console.log(data);
+        */
     }
 
     return (
