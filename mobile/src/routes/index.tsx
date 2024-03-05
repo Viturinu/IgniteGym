@@ -8,16 +8,14 @@ export function Routes() {
     const { colors } = useTheme();
 
     const theme = DefaultTheme;
-    const authData = useAuth(); //é um hook, logo sempre que houver atualização, refletirá aqui.
-
-    console.log(authData);
+    const { user } = useAuth(); //é um hook, logo sempre que houver atualização, refletirá aqui.
 
     theme.colors.background = colors.gray[700];
 
     return (
         <Box flex={1} bg="gray.700">
             <NavigationContainer theme={theme}>
-                <AuthRoutes />
+                {user.id ? <AppRoutes /> : <AuthRoutes />}
             </NavigationContainer>
         </Box>
     )

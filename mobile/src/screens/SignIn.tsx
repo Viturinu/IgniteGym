@@ -1,4 +1,4 @@
-import { VStack, Image, Text, Center, Heading, ScrollView } from "native-base"
+import { VStack, Image, Text, Center, Heading, ScrollView, useToast } from "native-base"
 import Background from "@assets/background.png"
 import LogoSvg from "@assets/logo.svg"
 import { Input } from "@components/Input"
@@ -9,6 +9,8 @@ import { useForm, Controller } from "react-hook-form"
 import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup"
 import { useAuth } from "@hooks/useAuth"
+import { AppError } from "@utils/AppError"
+import { useState } from "react"
 
 type FormDataProps = {
     email: string;
@@ -22,16 +24,31 @@ const signInSchema = yup.object({
 
 export function SignIn() {
 
+    const [isLoading, setIsLoading] = useState(false);
     const { signIn } = useAuth();
-
     const navigation = useNavigation<AuthNavigatorRoutesProps>();
+    const toast = useToast();
 
     const { control, handleSubmit, formState: { errors } } = useForm<FormDataProps>({
         resolver: yupResolver(signInSchema)
     });
 
-    function handleSignIn({ email, password }: FormDataProps) {
-        signIn(email, password);
+    async function handleSignIn({ email, password }: FormDataProps) {
+        try {
+            setIsLoading(true);
+            await signIn(email, password);
+        } catch (error) { //error é um objeto... neste caso da nossa classe criada no backend (AppError, que tem uma message e um status code)
+            const isAppError = error instanceof AppError;
+            const title = isAppError ? error.message : "Não foi possível entrar. Tente novamente mais tarde"
+
+            setIsLoading(false); //não no finally porque vamos encaminhar o usuário para outra rota, assim vamos perder a referência no momento do finally, podendo dar erro de memoria;
+
+            toast.show({
+                title,
+                placement: "top",
+                bgColor: "red.500"
+            })
+        }
     }
 
     function handleNewAccount() {
@@ -90,7 +107,9 @@ export function SignIn() {
                     <Button
                         title="Acessar"
                         variant="outline"
-                        onPress={handleSubmit(handleSignIn)} />
+                        onPress={handleSubmit(handleSignIn)}
+                        isLoading={isLoading}
+                    />
                 </Center>
 
                 <Center mb={4}>
