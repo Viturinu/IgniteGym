@@ -1,7 +1,6 @@
 import { UserDTO } from "@dtos/userDTO";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { api } from "@services/api";
-import { USER_STORAGE } from "@storage/storageConfig";
+import { storageAuthTokenSabe } from "@storage/storageAuthToken";
 import { storageUserGet, storageUserRemove, storageUserSave } from "@storage/storageUser";
 import { ReactNode, createContext, useEffect, useState } from "react";
 
@@ -21,8 +20,24 @@ export const AuthContext = createContext<AuthContextDataProps>({} as AuthContext
 export function AuthContextProvider({ children }: AuthContextProviderProps) { //tem que ser assim, pois é esperado a recepção de um objeto com a chave children; por isso, se passarmos children como ReactNode não vai dar certo, mas não é errado do ponto de vista lógico, uma vez que children é um tipo que aceitar qualquer coisa renderizavel na arvore de elementos React. 
 
     const [user, setUser] = useState<UserDTO>({} as UserDTO) //estado que ficara em nosso contexto, para manipulação e re-renderização a qualquer tempo
+    const [token, setToken] = useState("");
     const [isLoadingUserStorageData, setIsLoadingUserStorageData] = useState(true);
 
+    async function storageUserAndToken(userData: UserDTO, token: string) {
+        try {
+            setIsLoadingUserStorageData(true);
+
+            setToken(token);
+            setUser(userData);
+            await storageUserSave(userData);
+            await storageAuthTokenSabe(token);
+        } catch (error) {
+            throw error;
+        } finally {
+            setIsLoadingUserStorageData(false);
+        }
+
+    }
 
     async function signIn(email: string, password: string) { //ao inves de mandar setUser pra outra tela, a gente centraliza a lógica toda aqui nesse contexto, mandando o signIn (setUser() fica dentro do signIn()) apenas.
         try {
@@ -31,9 +46,8 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) { //
                 password
             });
 
-            if (data.user) {
-                setUser(data.user)
-                storageUserSave(data.user)
+            if (data.user && data.token) {
+                storageUserAndToken(data.user, data.token);
             }
         } catch (error) {
             throw error;
