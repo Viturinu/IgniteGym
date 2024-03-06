@@ -11,6 +11,8 @@ import { yupResolver } from "@hookform/resolvers/yup"
 import { api } from "@services/api"
 import axios from "axios"
 import { AppError } from "@utils/AppError"
+import { useState } from "react"
+import { useAuth } from "@hooks/useAuth"
 
 type FormDataProps = {
     name: string;
@@ -29,7 +31,11 @@ const signUpSchema = yup.object({
 
 export function SignUp() {
 
+    const { signIn } = useAuth();
+
     const navigation = useNavigation();
+
+    const [isLoading, setIsLoading] = useState(false);
 
     const toast = useToast();
 
@@ -43,8 +49,11 @@ export function SignUp() {
 
     async function handleSignUp({ name, email, password }: FormDataProps) {
         try {
+            setIsLoading(true);
             const response = await api.post("/users", { name, email, password }); //já vem convertida em json (diferente do fetch ali embaixo)
+            await signIn(email, password);
         } catch (error) {
+            setIsLoading(false);
             const isAppError = error instanceof AppError; //se for, ele é um erro tratado
             const title = isAppError ? error.message : "Não foi possível criar a conta, tente novamente mais tarde"
             toast.show({
@@ -150,6 +159,7 @@ export function SignUp() {
                     <Button
                         title="Criar e acessar"
                         onPress={handleSubmit(handleSignUp)}
+                        isLoading={isLoading}
                         mb={2}
                     />
                 </Center>
