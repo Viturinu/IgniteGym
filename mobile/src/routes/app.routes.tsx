@@ -22,7 +22,7 @@ const { Navigator, Screen } = createBottomTabNavigator<appRoutes>();
 
 export function AppRoutes() {
 
-    const { sizes, colors } = useTheme(); //hooks precisam estar dentro de uma função
+    const { sizes, colors } = useTheme(); //hooks precisam estar dentro de uma função (fora do return, a gente não tem acesso ao theme do nativebase, por isso precisamos desestruturar e chamar)
 
     const iconSize = sizes[6];
 
