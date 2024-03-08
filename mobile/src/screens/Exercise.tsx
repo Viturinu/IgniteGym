@@ -11,7 +11,7 @@ import { Button } from "@components/Button";
 import { AppError } from "@utils/AppError";
 import { api } from "@services/api";
 import { useEffect, useState } from "react";
-import { ExerciseDTO } from "@dtos/exerciseDTO";
+import { ExerciseDTO } from "@dtos/ExerciseDTO";
 import { Loading } from "@components/Loading";
 
 type RouteParams = {
@@ -21,6 +21,7 @@ type RouteParams = {
 export function Exercise() {
 
     const [isLoading, setIsLoading] = useState(true);
+    const [sendingRegister, setSendingRegister] = useState(false);
 
     const [exercise, setExercise] = useState<ExerciseDTO>({} as ExerciseDTO);
     const navigation = useNavigation<AppNavigatorRoutesProps>();
@@ -31,6 +32,29 @@ export function Exercise() {
 
     function handleGoBack() {
         navigation.goBack();
+    }
+
+    async function handleExerciseHistoryRegister() {
+        try {
+            setSendingRegister(true);
+            await api.post("/history", { exercise_id: exerciseId });
+            toast.show({
+                title: "Parabéns! Exercício registrado no seu histórico",
+                placement: "top",
+                bgColor: "green.700"
+            });
+            navigation.navigate("history");
+        } catch (error) {
+            const isAppError = error instanceof AppError;
+            const title = isAppError ? error.message : "Não foi possível registrar o exercício"
+            toast.show({
+                title,
+                placement: "top",
+                bgColor: "red.500"
+            })
+        } finally {
+            setSendingRegister(false);
+        }
     }
 
     async function fetchExerciseDetails() {
@@ -104,7 +128,11 @@ export function Exercise() {
                                         </Text>
                                     </HStack>
                                 </HStack>
-                                <Button title="Marcar como resultado" />
+                                <Button
+                                    title="Marcar como resultado"
+                                    isLoading={sendingRegister}
+                                    onPress={handleExerciseHistoryRegister}
+                                />
                             </Box>
                         </VStack>
                 }

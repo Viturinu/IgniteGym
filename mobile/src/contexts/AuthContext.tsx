@@ -65,7 +65,7 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) { //
         //took out try catch cause it is just an update info according to teacher
         api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-        setToken(token);
+        setToken(token); //redundante porque já estamos colocando no header (tirar posteriormente)
         setUser(userData);
     }
 
@@ -88,7 +88,7 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) { //
             const userLogged = await storageUserGet(); //busca informações de usuário, na reinicialização do app ou reabertura, pois useEffect chama loadUserData()
             const token = await storageAuthTokenGet(); //busca token de usuário, na reinicialização do app ou reabertura, pois useEffect chama loadUserData()
             if (token && userLogged) { //confere se chegou algo aqui nessas variáveis
-                userAndTokenUpdate(user, token); //se chegou ele vai atualizar os estados (não precisa escrever, pois ele buscou de lá mesmo, do AsyncStorage)
+                userAndTokenUpdate(user, token); //se chegou ele vai atualizar os estados (não precisa escrever no AsyncStorage, pois ele buscou de lá mesmo, do AsyncStorage)
 
             }
         } catch (error) {

@@ -2,7 +2,7 @@ import { ExerciseCard } from "@components/ExerciseCard";
 import { Group } from "@components/Group";
 import { HomeHeader } from "@components/HomeHeader";
 import { Loading } from "@components/Loading";
-import { ExerciseDTO } from "@dtos/exerciseDTO";
+import { ExerciseDTO } from "@dtos/ExerciseDTO";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { AppNavigatorRoutesProps } from "@routes/app.routes";
 import { api } from "@services/api";
@@ -14,7 +14,7 @@ export function Home() {
 
     const [groups, setGroups] = useState<string[]>([]);
     const [exercises, setExercises] = useState<ExerciseDTO[]>([]);
-    const [groupSelected, setGroupSelected] = useState("");
+    const [groupSelected, setGroupSelected] = useState("antebraço");
     const [isLoading, setIsLoading] = useState(true);
 
     const toast = useToast();
