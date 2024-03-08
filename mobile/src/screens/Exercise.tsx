@@ -12,12 +12,15 @@ import { AppError } from "@utils/AppError";
 import { api } from "@services/api";
 import { useEffect, useState } from "react";
 import { ExerciseDTO } from "@dtos/exerciseDTO";
+import { Loading } from "@components/Loading";
 
 type RouteParams = {
     exerciseId: string;
 }
 
 export function Exercise() {
+
+    const [isLoading, setIsLoading] = useState(true);
 
     const [exercise, setExercise] = useState<ExerciseDTO>({} as ExerciseDTO);
     const navigation = useNavigation<AppNavigatorRoutesProps>();
@@ -32,6 +35,7 @@ export function Exercise() {
 
     async function fetchExerciseDetails() {
         try {
+            setIsLoading(true);
             const response = await api.get(`/exercises/${exerciseId}`); //aqui no axios, ele mesmo já faz o parse na string retornada, não precisamos preocuipar com isso; se usar o fetch puro do js, aí sim precimos fazer o JSON.parse().
             setExercise(response.data);
         } catch (error) {
@@ -42,6 +46,8 @@ export function Exercise() {
                 bgColor: "red.500",
                 title
             })
+        } finally {
+            setIsLoading(false);
         }
     }
 
@@ -68,34 +74,41 @@ export function Exercise() {
                         </HStack>
                     </HStack>
                 </VStack>
-                <VStack px={8}>
-                    <Image
-                        w="full"
-                        h={80}
-                        source={{ uri: `${api.defaults.baseURL}/exercise/demo/${exercise.demo}` }} //api nos retorna o nome do gif, porém nós que temos que fazer o caminho do servidor para encontrar esse gif (não é uma chamada get convencional como fazemos por aqui usando api.get() ou fetch(); mas obvio que não deixa de ser uma requisição http)
-                        alt="Nome do exercicio"
-                        mb={3}
-                        resizeMode="cover"
-                        rounded="lg"
-                    />
-                    <Box bg="gray.600" rounded="md" py={4} px={4} >
-                        <HStack alignItems="center" justifyContent="space-around" mb={6}>
-                            <HStack>
-                                <SeriesSvg />
-                                <Text color="gray.200" ml={2}>
-                                    3 séries
-                                </Text>
-                            </HStack>
-                            <HStack>
-                                <RepetitionsSvg />
-                                <Text color="gray.200" ml={2}>
-                                    12 repetições
-                                </Text>
-                            </HStack>
-                        </HStack>
-                        <Button title="Marcar como resultado" />
-                    </Box>
-                </VStack>
+                {
+                    isLoading ? <Loading /> :
+                        <VStack px={8}>
+                            <Box rounded="lg" mb={3} overflow="hidden">
+                                <Image
+                                    w="full"
+                                    h={80}
+                                    source={{ uri: `${api.defaults.baseURL}/exercise/demo/${exercise.demo}` }} //api nos retorna o nome do gif, porém nós que temos que fazer o caminho do servidor para encontrar esse gif (não é uma chamada get convencional como fazemos por aqui usando api.get() ou fetch(); mas obvio que não deixa de ser uma requisição http)
+                                    alt="Nome do exercicio"
+                                    resizeMode="cover"
+                                    rounded="lg"
+                                />
+                            </Box>
+
+
+                            <Box bg="gray.600" rounded="md" py={4} px={4} >
+                                <HStack alignItems="center" justifyContent="space-around" mb={6}>
+                                    <HStack>
+                                        <SeriesSvg />
+                                        <Text color="gray.200" ml={2}>
+                                            {exercise.series} séries
+                                        </Text>
+                                    </HStack>
+                                    <HStack>
+                                        <RepetitionsSvg />
+                                        <Text color="gray.200" ml={2}>
+                                            {exercise.repetitions} repetições
+                                        </Text>
+                                    </HStack>
+                                </HStack>
+                                <Button title="Marcar como resultado" />
+                            </Box>
+                        </VStack>
+                }
+
             </ScrollView>
         </VStack>
     )

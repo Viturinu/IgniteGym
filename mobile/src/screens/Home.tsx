@@ -12,9 +12,9 @@ import { useCallback, useEffect, useState } from "react";
 
 export function Home() {
 
-    const [groups, setGroups] = useState<string[]>(["Costas", "Biceps", "Triceps", "Ombros"]);
+    const [groups, setGroups] = useState<string[]>([]);
     const [exercises, setExercises] = useState<ExerciseDTO[]>([]);
-    const [groupSelected, setGroupSelected] = useState("Costas");
+    const [groupSelected, setGroupSelected] = useState("");
     const [isLoading, setIsLoading] = useState(true);
 
     const toast = useToast();
@@ -28,7 +28,7 @@ export function Home() {
     async function fetchGroups() {
         try {
             setIsLoading(true);
-            const response = await api.get("/groups")
+            const response = await api.get("/groups") //mesmo a gente setando await, muitas vezes o return já vai tentar carregar a parte gráfica, mesmo aqui estando aguardando para dar sequencia na lógica, e aí está o problkema. Muitos erros acontecem por conta disso, retornando undefined. (como no caso do gif) (solução é o uso do isLoading)
             setGroups(response.data);
         } catch (error) {
             const isAppError = error instanceof AppError;
@@ -45,6 +45,7 @@ export function Home() {
 
     async function fetchExercisesByGroup() {
         try {
+            setIsLoading(true);
             const response = await api.get(`/exercises/bygroup/${groupSelected}`);
             setExercises(response.data);
         } catch (error) {
@@ -120,7 +121,6 @@ export function Home() {
                             }}
                         />
                     </VStack>}
-
         </VStack>
     )
 }
