@@ -1,4 +1,4 @@
-import { UserDTO } from "@dtos/userDTO";
+import { UserDTO } from "@dtos/UserDTO";
 import { api } from "@services/api";
 import { storageAuthTokenGet, storageAuthTokenRemove, storageAuthTokenSave } from "@storage/storageAuthToken";
 import { storageUserGet, storageUserRemove, storageUserSave } from "@storage/storageUser";
@@ -20,8 +20,7 @@ export const AuthContext = createContext<AuthContextDataProps>({} as AuthContext
 export function AuthContextProvider({ children }: AuthContextProviderProps) { //tem que ser assim, pois é esperado a recepção de um objeto com a chave children; por isso, se passarmos children como ReactNode não vai dar certo, mas não é errado do ponto de vista lógico, uma vez que children é um tipo que aceitar qualquer coisa renderizavel na arvore de elementos React. 
 
     const [user, setUser] = useState<UserDTO>({} as UserDTO) //estado que ficara em nosso contexto, para manipulação e re-renderização a qualquer tempo
-    const [token, setToken] = useState("");
-    const [isLoadingUserStorageData, setIsLoadingUserStorageData] = useState(true);
+    const [isLoadingUserStorageData, setIsLoadingUserStorageData] = useState(true); //por isso no signin não colocamos como true desde o inicio, pois ela já é inicializada como true
 
     async function signIn(email: string, password: string) { //ao inves de mandar setUser pra outra tela, a gente centraliza a lógica toda aqui nesse contexto, mandando o signIn (setUser() fica dentro do signIn()) apenas.
         try {
@@ -49,10 +48,9 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) { //
             setIsLoadingUserStorageData(true)
             //Atualiza os estados pra vazios
             setUser({} as UserDTO);
-            setToken("");
             //Remove do AsyncStorage os dados de usuário e token de usuário
-            await storageAuthTokenRemove();
-            await storageUserRemove();
+            await storageAuthTokenRemove(); //excluindo do Async Storage
+            await storageUserRemove(); //excluindo do Async Storage
         } catch (error) {
             throw error;
         } finally {
@@ -63,17 +61,15 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) { //
 
     async function userAndTokenUpdate(userData: UserDTO, token: string) { //vai atualizar os estados e cabeçalho de requisições da aplicação tanto na reinicialização quanto no login ()
         //took out try catch cause it is just an update info according to teacher
-        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-        setToken(token); //redundante porque já estamos colocando no header (tirar posteriormente)
-        setUser(userData);
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;//definindo o headers com a recuperação do api.post
+        setUser(userData); //definindo o estado com a recuperação do api.post
     }
 
     async function storageUserAndTokenSave(userData: UserDTO, token: string) { //vai salvar no AsyncStorage pra persistir os dados no mobile
         try {
             setIsLoadingUserStorageData(true);
-            await storageUserSave(userData);
-            await storageAuthTokenSave(token); //frufru na minha opiniao; podia ser feito aqui mesmo;
+            await storageUserSave(userData); //gravando no Async
+            await storageAuthTokenSave(token); //gravando no Async -> frufru na minha opiniao; podia ser feito aqui mesmo;
         } catch (error) {
             throw error;
         } finally {
@@ -89,7 +85,6 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) { //
             const token = await storageAuthTokenGet(); //busca token de usuário, na reinicialização do app ou reabertura, pois useEffect chama loadUserData()
             if (token && userLogged) { //confere se chegou algo aqui nessas variáveis
                 userAndTokenUpdate(user, token); //se chegou ele vai atualizar os estados (não precisa escrever no AsyncStorage, pois ele buscou de lá mesmo, do AsyncStorage)
-
             }
         } catch (error) {
             throw error;
