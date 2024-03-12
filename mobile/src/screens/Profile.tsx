@@ -14,18 +14,24 @@ import { yupResolver } from "@hookform/resolvers/yup";
 
 type FormDataProps = {
     name: string;
-    email: string;
-    password: string;
-    old_password: string;
-    confirm_password: string;
+    email?: string;
+    password?: string | null;
+    old_password?: string;
+    confirm_password?: string | null;
 }
 
 const profileSchema = yup.object({
     name: yup.string().required("Informe o nome."),
-    email: yup.string().required("Informe o e-mail."),
-    password: yup.string().required("Informe a senha."),
-    old_password: yup.string().required("Informe a senha antiga."),
-    confirm_password: yup.string().required("Confirme a nova senha.")
+    password: yup.string().min(6, "A senha deve ter no mínimo 6 caracteres").nullable().transform((value) => !!value ? value : null),
+    confirm_password: yup
+        .string()
+        .nullable()
+        .transform((value) => !!value ? value : null)
+        .oneOf([yup.ref("password")], "A confirmação de senha não confere.")
+        .when("password", {
+            is: true,
+            then: () => yup.string().nullable().required("Informe a confirmação da senha")
+        })
 });
 
 export function Profile() {
@@ -78,7 +84,7 @@ export function Profile() {
     }
 
     async function handleProfileUpdate(data: FormDataProps) {
-
+        console.log(data);
     }
 
     return (
@@ -124,6 +130,7 @@ export function Profile() {
                         render={({ field: { value, onChange } }) => (
                             <Input
                                 placeholder="E-mail"
+                                value={value}
                                 isDisabled
                                 bg="gray.600"
                             />
@@ -158,7 +165,7 @@ export function Profile() {
                                 placeholder="Nova senha"
                                 secureTextEntry
                                 onChangeText={onChange}
-                                errorMessage={errors.name?.message}
+                                errorMessage={errors.password?.message}
                             />
                         )}
                     />
@@ -171,6 +178,7 @@ export function Profile() {
                                 placeholder="Confirme nova senha"
                                 secureTextEntry
                                 onChangeText={onChange}
+                                errorMessage={errors.confirm_password?.message}
                             />
                         )}
                     />
