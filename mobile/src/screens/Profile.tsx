@@ -11,6 +11,8 @@ import * as FileSystem from "expo-file-system"
 import { useAuth } from "@hooks/useAuth";
 import * as yup from "yup"
 import { yupResolver } from "@hookform/resolvers/yup";
+import { api } from "@services/api";
+import { AppError } from "@utils/AppError";
 
 type FormDataProps = {
     name: string;
@@ -29,19 +31,20 @@ const profileSchema = yup.object({
         .transform((value) => !!value ? value : null)
         .oneOf([yup.ref("password")], "A confirmação de senha não confere.")
         .when("password", {
-            is: true,
-            then: () => yup.string().nullable().required("Informe a confirmação da senha")
+            is: (Field: string) => !!Field,
+            then: (confirm_password) => confirm_password.required("Informe a confirmação da senha")
         })
 });
 
 export function Profile() {
 
     const PHOTO_SIZE = 33;
+    const [isUpdating, setIsUpdating] = useState(false);
     const [photoIsLoading, setPhotoIsLoading] = useState(false);
 
     const [userPhoto, setUserPhoto] = useState("https://github.com/viturinu.png")
 
-    const { user } = useAuth();
+    const { user, updateUserProfile } = useAuth();
     const toast = useToast();
 
     const { control, handleSubmit, formState: { errors } } = useForm<FormDataProps>({
@@ -67,13 +70,36 @@ export function Profile() {
             if (photoSelected.assets[0].uri) {
                 const photoInfo = await FileSystem.getInfoAsync(photoSelected.assets[0].uri, { md5: true, size: true });
 
-                if (photoInfo.exists && (photoInfo.size / 1024 / 1024) > 0.001) { //sempre verificar uma promisse, pois pode dar algum erro ao tentar acessar certas propriedades sem a devida verificação
+                if (photoInfo.exists && (photoInfo.size / 1024 / 1024) > 5) { //(maior que 5mb? ) sempre verificar uma promisse, pois pode dar algum erro ao tentar acessar certas propriedades sem a devida verificação
                     return toast.show({
                         title: "Essa imagem é muito grande, escolha uma de até 5Mb",
                         placement: "top",
                         bgColor: "red.500"
                     })
                 }
+
+                const fileExtension = photoSelected.assets[0].uri.split(".").pop();
+                const photoFile = {
+                    name: `${user.name}.${fileExtension}`.toLowerCase(),
+                    uri: photoSelected.assets[0].uri,
+                    type: `${photoSelected.assets[0].type}/${fileExtension}`
+                } as any;
+
+                const userPhotoUploadForm = new FormData(); //preparando o formulário para enviar a imagem, pois agora não será enviado pelo body, logo temos que criar esse FormData
+                userPhotoUploadForm.append("avatar", photoFile)
+
+                await api.patch("users/avatar", userPhotoUploadForm, {
+                    headers: {
+                        "Content-Type": "multipart/form-data" //pra afirmar que não é mais um conteúdo JSON, e sim um multipart
+                    }
+                });
+
+                toast.show({
+                    title: "A imagem foi atualizada com sucesso.",
+                    placement: "top",
+                    bgColor: "green.500"
+                })
+
                 setUserPhoto(photoSelected.assets[0].uri);
             }
         } catch (error) {
@@ -84,7 +110,30 @@ export function Profile() {
     }
 
     async function handleProfileUpdate(data: FormDataProps) {
-        console.log(data);
+        try {
+            setIsUpdating(true);
+
+            const userUpdated = user; //lá do auth, com dados desatualizados
+            userUpdated.name = data.name; //criando nova variável com novo nome, para enviar para atualizações
+            await api.put("/users", data); //fazendo alteração no Banco de dados
+            updateUserProfile(userUpdated); //fazendo alteração no Estado e no AsyncStorage
+
+            toast.show({
+                title: "Perfil atualizado com sucesso.",
+                placement: "top",
+                bgColor: "green.500"
+            })
+        } catch (error) {
+            const isAppError = error instanceof AppError;
+            const title = isAppError ? error.message : "Não foi possível realizar a atualização. Tente mais tarde."
+            toast.show({
+                title,
+                placement: "top",
+                bgColor: "red.500"
+            })
+        } finally {
+            setIsUpdating(false);
+        }
     }
 
     return (
@@ -186,7 +235,9 @@ export function Profile() {
                     <Button
                         title="Atualizar"
                         mt={4}
-                        onPress={handleSubmit(handleProfileUpdate)} />
+                        onPress={handleSubmit(handleProfileUpdate)}
+                        isLoading={isUpdating}
+                    />
                 </VStack>
             </ScrollView>
         </VStack>

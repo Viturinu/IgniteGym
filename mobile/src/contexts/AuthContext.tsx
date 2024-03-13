@@ -9,6 +9,7 @@ export type AuthContextDataProps = {
     isLoadingUserStorageData: boolean;
     signIn: (email: string, password: string) => Promise<void>;
     signOut: () => Promise<void>;
+    updateUserProfile: (userUpdated: UserDTO) => Promise<void>;
 }
 
 type AuthContextProviderProps = {
@@ -65,6 +66,15 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) { //
         setUser(userData); //definindo o estado com a recuperação do api.post
     }
 
+    async function updateUserProfile(userUpdate: UserDTO) {
+        try {
+            setUser(userUpdate);
+            await storageUserSave(userUpdate);
+        } catch (error) {
+            throw error;
+        }
+    }
+
     async function storageUserAndTokenSave(userData: UserDTO, token: string) { //vai salvar no AsyncStorage pra persistir os dados no mobile
         try {
             setIsLoadingUserStorageData(true);
@@ -103,7 +113,8 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) { //
             user,
             signIn, //usar estado pra aproveitar a estrutura de renderização
             signOut,
-            isLoadingUserStorageData
+            isLoadingUserStorageData,
+            updateUserProfile
         }}>
             {children}
         </AuthContext.Provider>
