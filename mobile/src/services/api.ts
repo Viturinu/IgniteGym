@@ -1,9 +1,15 @@
 import { AppError } from "@utils/AppError";
-import axios from "axios"
+import axios, { AxiosInstance } from "axios"
+
+type SignOut = () => void;
+
+type APIInstanceProps = AxiosInstance & { //sem essa definição de tipo, já temos uma AxiosInstance autoamticamente (foco aqui é no interceptador)
+    registerInterceptTokenManager: (signOut: SignOut) => () => void;//função que recebe outra função
+}
 
 const api = axios.create({
     baseURL: "http://10.10.10.6:3333"
-});
+}) as APIInstanceProps;
 
 api.interceptors.response.use(response => response, error => {
     if (error.response && error.response.data) { //padrão utilizado na api, logo estamos verificando se aquilo que fizemos na api está caindo aqui, com a mensagem padronizada pela api em uma condicional (se cair, foi aquele erro lá que deu)
