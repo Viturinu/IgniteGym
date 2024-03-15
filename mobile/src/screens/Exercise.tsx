@@ -28,6 +28,7 @@ export function Exercise() {
 
     const route = useRoute();
     const { exerciseId } = route.params as RouteParams; //recuperamos o id do exercicio
+
     const toast = useToast();
 
     function handleGoBack() {

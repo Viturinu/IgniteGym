@@ -30,10 +30,10 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) { //
                 password
             });
 
-            if (data.user && data.token) { //check se voltou os resultados de usuario e token de usuário
+            if (data.user && data.token && data.refresh_token) { //check se voltou os resultados de usuario, token e refresh_token de usuário
 
                 setIsLoadingUserStorageData(true);
-                await storageUserAndTokenSave(data.user, data.token); //salva os dados no AsyncStorage
+                await storageUserAndTokenSave(data.user, data.token, data.refresh_token); //salva os dados no AsyncStorage
                 await userAndTokenUpdate(data.user, data.token); //salva as variáveis nos estados
             }
         } catch (error) {
@@ -66,7 +66,7 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) { //
         setUser(userData); //definindo o estado com a recuperação do api.post
     }
 
-    async function updateUserProfile(userUpdate: UserDTO) {
+    async function updateUserProfile(userUpdate: UserDTO) { //pra atualizar no handleUserPhotoSelected() e no handleUserUpdate()
         try {
             setUser(userUpdate);
             await storageUserSave(userUpdate);
@@ -75,11 +75,11 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) { //
         }
     }
 
-    async function storageUserAndTokenSave(userData: UserDTO, token: string) { //vai salvar no AsyncStorage pra persistir os dados no mobile
+    async function storageUserAndTokenSave(userData: UserDTO, token: string, refresh_token: string) { //vai salvar no AsyncStorage pra persistir os dados no mobile
         try {
             setIsLoadingUserStorageData(true);
             await storageUserSave(userData); //gravando no Async
-            await storageAuthTokenSave(token); //gravando no Async -> frufru na minha opiniao; podia ser feito aqui mesmo;
+            await storageAuthTokenSave({ token, refresh_token }); //gravando no Async -> frufru na minha opiniao; podia ser feito aqui mesmo;
         } catch (error) {
             throw error;
         } finally {
@@ -92,7 +92,7 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) { //
             setIsLoadingUserStorageData(true);
 
             const userLogged = await storageUserGet(); //busca informações de usuário, na reinicialização do app ou reabertura, pois useEffect chama loadUserData()
-            const token = await storageAuthTokenGet(); //busca token de usuário, na reinicialização do app ou reabertura, pois useEffect chama loadUserData()
+            const { token } = await storageAuthTokenGet(); //busca token de usuário, na reinicialização do app ou reabertura, pois useEffect chama loadUserData()
             if (token && userLogged) { //confere se chegou algo aqui nessas variáveis
                 userAndTokenUpdate(user, token); //se chegou ele vai atualizar os estados (não precisa escrever no AsyncStorage, pois ele buscou de lá mesmo, do AsyncStorage)
             }
@@ -106,7 +106,13 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) { //
 
     useEffect(() => {
         loadUserData();
-    }, [])
+    }, []);
+    useEffect(() => {
+        const subscribe = api.registerInterceptTokenManager(signOut); //aqui temos acesso a função de signOut, lá no api.ts nós não temos; portanto, passamos ela aqui no AuthContext.
+        return () => {
+            subscribe(); //No React, quando você usa o useEffect, você pode retornar uma função que será executada quando o componente for desmontado, o que é conhecido como uma "função de limpeza" ou "cleanup function". Essa função de limpeza é opcional e é usada para limpar quaisquer efeitos secundários gerados pelo código dentro do useEffect antes que o componente seja removido do DOM.
+        }
+    }, []);
 
     return (
         <AuthContext.Provider value={{
