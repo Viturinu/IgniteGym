@@ -108,7 +108,7 @@ export function AuthContextProvider({ children }: AuthContextProviderProps) { //
         loadUserData();
     }, []);
     useEffect(() => {
-        const subscribe = api.registerInterceptTokenManager(signOut); //aqui temos acesso a função de signOut, lá no api.ts nós não temos; portanto, passamos ela aqui no AuthContext.
+        const subscribe = api.registerInterceptTokenManager(signOut); //aqui temos acesso a função de signOut, lá no api.ts nós não temos; portanto, passamos ela aqui no AuthContext. Aqui acontece a execução do interceptor;
         return () => {
             subscribe(); //No React, quando você usa o useEffect, você pode retornar uma função que será executada quando o componente for desmontado, o que é conhecido como uma "função de limpeza" ou "cleanup function". Essa função de limpeza é opcional e é usada para limpar quaisquer efeitos secundários gerados pelo código dentro do useEffect antes que o componente seja removido do DOM.
         }

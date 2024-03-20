@@ -37,7 +37,7 @@ export function SignUp() {
 
     const toast = useToast();
 
-    const { control, handleSubmit, formState: { errors } } = useForm<FormDataProps>({
+    const { control, handleSubmit, formState: { errors } } = useForm<FormDataProps>({ //este error será carregado com o estados de erros verificados pelo resolver abaixo
         resolver: yupResolver(signUpSchema)
     });
 
@@ -106,7 +106,7 @@ export function SignUp() {
                                 placeholder="Nome"
                                 onChangeText={onChange}
                                 value={value}
-                                errorMessage={errors.name?.message}
+                                errorMessage={errors.name?.message} //erro no name?
                             />
                         )}
                     />
